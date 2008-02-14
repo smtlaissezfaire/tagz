@@ -36,7 +36,11 @@ def install_rb(srcdir=nil, destdir=nil, mode=nil, bin=nil)
     next unless FileTest.file?(f)
     next if (f = f[srcdir.length+1..-1]) == nil
     next if (/CVS$/ =~ File.dirname(f))
+    next if (/\.svn/ =~ File.dirname(f))
     next if f =~ %r/\.lnk/
+    next if f =~ %r/\.svn/
+    next if f =~ %r/\.swp/
+    next if f =~ %r/\.svn/
     path.push f
     dir |= [File.dirname(f)]
   end
