@@ -1,0 +1,240 @@
+NAME
+  tagz.rb
+
+SYNOPSIS
+  object mixin for squeaky clean and super speedy generation of any sgml
+  (html/xml) tags using a private dsl
+
+    + module level interface
+
+        require 'tagz'
+
+        html =
+          Tagz{
+            html_{
+              body_(:class => 'container'){
+                div_{ 'content' }
+              }
+            }
+          }
+
+    + private mixin interface
+
+        require 'tagz'
+
+        class Table < ::Array 
+          include Tagz
+
+          def initialize width, height
+            @width, @height = width, height
+          end
+
+          def to_row
+            Tagz{
+              table_(:width => @width, :height => @height){
+                each do |row|
+                  tr_{
+                    row.each{|cell| td_{ cell }}
+                  }
+                end
+              }
+            }
+          end
+        end
+
+DESCRIPTION
+  tagz.rb offers a mixin module which adds four private methods to the calling
+  object:
+
+    tagz
+    tagz__
+    __tagz
+    method_missing
+
+  because the mixing adds only private methods it's safe to use, for instance,
+  in the controller of a web framework which exposes methods to the world as
+  http actions
+
+  the method_missing tagz.rb adds *only* works from inside a Tagz{}/tagz{}
+  block, for instance
+
+    include Tagz
+
+    tagz{ h1_{ 'this works' } }
+
+    h1_{ 'this throws NameError' }
+
+  tagz.rb is very non-restrictive, allowing you to generate invalid html,
+  html4, xml, whatever, all using the same simple interface
+
+  for example
+
+    require 'tagz'
+    include Tagz
+   
+    tagz{ 
+      div_(:class => 'pinky'){ 'content' }
+    }
+
+    #=> <div class="pinky">content</div>
+
+   
+    tagz{
+      img_(:src => 'foo.png')
+      img_(:src => 'foo.png'){}
+    }
+
+    #=> <img src="foo.png">
+    #=> <img src="foo.png" />
+
+   
+    tagz{
+      br_
+      br_!
+      br_{}
+    }
+
+    #=> <br>
+    #=> <br />
+    #=> <br />
+
+   
+    tagz{
+      span_('content', :style => 'color:mauve')
+    }
+
+    #=> <span style="color:mauve">content</span>
+
+   
+    tagz{
+      div_(:class => 'container'){
+        span_('content', :style => 'color:mauve')
+      }
+    }
+
+    #=> <div class="container"><span style="color:mauve">content</span></div>
+
+   
+    tagz{
+      div_(:class => 'container')
+        span_('content', :style => 'color:mauve')
+      _div
+    }
+
+    #=> <div class="container"><span style="color:mauve">content</span></div>
+
+   
+    tagz{
+      table_(:width => 42{ 
+        %w( 1 2 3 ).each do |row|
+          tr_{
+            row.each{|cell| td_{ cell }}
+          }
+        end
+      }
+    }
+
+    #=> <table width="42"><tr><td>1</td><td>2</td><td>3</td></tr></table>
+
+    # note that the return value of the table block ( the array %w( 1 2 3 )
+    # is *NOT* added to the content.  the rule is: add the return value of
+    # the block if, and only if, the block did not add any content itself
+    # during evaluation
+
+   
+    tagz{
+      div_{
+        div_{ 'content' }
+        'this is ignored'
+      }
+    }
+
+    #=> <div><div>content</div></div>
+
+    # this is a side effect of the above rule
+
+   
+    tagz{
+      div_{
+        'this is not ignored, see above rule'
+      }
+    }
+
+    #=> <div>this is not ignored, see above rule</div>
+
+   
+    tagz{
+      div_{
+        div_{ 'content' }
+        tagz << 'this is appended' << ' and so is this'
+      }
+    }
+
+    #=> <div><div>content</div>this is appended and so is this</div>
+
+   
+    tagz{
+      a_
+      b_
+      c_
+        tagz << 'valid html'
+      _a
+      _b
+      _c
+      _invalid
+    }
+
+    #=> <a><b><c>valid html</a></b></c></invalid>
+
+   
+    tagz{
+      __
+      a_{ 'content' }
+
+      __ __
+      b_{ 'content' }
+
+      __ __ __
+      c_{ 'content' }
+    }
+
+    #=> \n<a>content</a>\n\n<b>content</b>\n\n\n<c>content</c>
+
+    # note that \n is newline.  the html tagz generates is quite compact,
+    # you can do 'tagz << "\n"' or just use the '__' method to output some
+    # linebreaks
+
+   
+    tagz{
+      link = e(:a, :href => 'foo.com'){ 'link text' }
+
+      div_{ link }
+    }
+
+    #=> <div><a href="foo.com">link text</a>
+
+
+  a couple of notes: *none* of the method_missing magic is available outside
+  the 'tagz' block and, even inside, it supers-up when the missing method does
+  not look like a tag method.  you can use Tagz{} as a module method but to
+  have access to @ivars you'll want to mixin the module to your own class and
+  use tagz{}.  no public methods are added to your object, only four private
+  ones.
+      
+
+HISTORY
+  1.0.0
+    totally reworked tagz, dropping 300 loc - only 170 loc now.  this release
+    is *NOT* backward compatible with other tagz versions, though the api is
+    very very close.  the rework makes tagz safer to mixin, faster, and
+    produces nicer looking html.  this version also marks ramaze template
+    support.
+
+INSTALL
+  gem install tagz
+
+URI
+  http://rubyforge.org/projects/codeforpeople
+
+AUTHOR
+  ara.t.howard@gmail.com

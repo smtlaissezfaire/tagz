@@ -178,8 +178,10 @@ unless defined? Tagz
         when %r/^_([^_].*)$/o
           m = $1 
           __tagz(m, *a, &b)
-        when 'tag', 'e'
+        when 'e'
           Element.new(*a, &b)
+        when '__'
+          tagz << "\n"
         else
           super
       end
