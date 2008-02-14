@@ -1,0 +1,4 @@
+#!/usr/bin/env ruby
+ARGV.unshift 'lighttpd' if ARGV.empty?
+require File.dirname(__FILE__) + '/../config/boot'
+require 'commands/server'

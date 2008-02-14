@@ -1,0 +1,17 @@
+<html>
+  <head>
+    <title> <%= @title %> </title>
+  </head>
+
+  <body>
+    <%=
+
+      tagz {
+
+        ul_{ @list.each{|element| li_{ element } } }
+
+      }
+
+    %>
+  </body>
+</html>

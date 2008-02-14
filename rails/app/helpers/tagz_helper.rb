@@ -1,0 +1,2 @@
+module TagzHelper
+end
