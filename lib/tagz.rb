@@ -5,8 +5,8 @@ unless defined? Tagz
   module Tagz
     unless defined?(Tagz::VERSION)
       Tagz::VERSION = [
-        Tagz::VERSION_MAJOR = 1,
-        Tagz::VERSION_MINOR = 0,
+        Tagz::VERSION_MAJOR = 4,
+        Tagz::VERSION_MINOR = 2,
         Tagz::VERSION_TEENY = 0 
       ].join('.')
       def Tagz.version() Tagz::VERSION end
@@ -83,26 +83,19 @@ unless defined? Tagz
       self
     end
 
-  private
-
-    def tagz &block
-      if block
-        if not defined?(@tagz) or @tagz.nil?
-          @tagz = Fragment.new
-          top = true
-        end
-        begin
-          size = @tagz.size
-          value = instance_eval(&block)
-          @tagz << value unless(Fragment === value or @tagz.size > size)
-          @tagz
-        ensure
-          @tagz = nil if top
-        end
-      else
-        @tagz ||= Fragment.new
+    module Globally
+    private
+      include Tagz
+      def method_missing m, *a, &b 
+        tagz{ super }
       end
     end
+
+    def Tagz.globally
+      Globally
+    end
+
+  private
 
     def tagz__ name, *argv, &block
       options = {}
@@ -141,7 +134,7 @@ unless defined? Tagz
         if block
           size = tagz.size
           value = block.call(tagz)
-          unless value
+          if NilClass == value
             tagz[-1] = "/>"
           else
             tagz << value.to_s unless(Fragment === value or tagz.size > size)
@@ -165,25 +158,54 @@ unless defined? Tagz
       tagz << "</#{ tag }>"
     end
 
+    def tagz &block
+      if block
+        if not defined?(@tagz) or @tagz.nil?
+          @tagz = Fragment.new
+          top = true
+        end
+        begin
+          size = @tagz.size
+          value = instance_eval(&block)
+          @tagz << value unless(Fragment === value or @tagz.size > size)
+          @tagz.to_s
+        ensure
+          @tagz = nil if top
+        end
+      else
+        @tagz if defined? @tagz
+      end
+    end
+
     def method_missing m, *a, &b
-      return super unless @tagz
+      if not Globally === self
+        unless defined?(@tagz) and @tagz
+          begin
+            super
+          ensure
+            $!.set_backtrace caller(skip=1) if $!
+          end
+        end
+      end
+      
       case m.to_s
         when %r/^(.*[^_])_(!)?$/o
           m, bang = $1, $2
-          unless bang
-            tagz__(m, *a, &b)
-          else
-            tagz__(m, *a){}
-          end
+          b ||= lambda{} if bang
+          tagz{ tagz__(m, *a, &b) }
         when %r/^_([^_].*)$/o
           m = $1 
-          __tagz(m, *a, &b)
+          tagz{ __tagz(m, *a, &b) }
         when 'e'
           Element.new(*a, &b)
         when '__'
-          tagz << "\n"
+          tagz{ tagz << "\n" }
         else
-          super
+          begin
+            super
+          ensure
+            $!.set_backtrace caller(skip=1) if $!
+          end
       end
     end
 
@@ -196,6 +218,11 @@ unless defined? Tagz
     else
       Tagz.tagz(*argv, &block)
     end
+  end
+
+  if defined?(Rails)
+    ActionView::Base.send(:include, Tagz.globally)
+    ActionController::Base.send(:include, Tagz)
   end
 
 end
