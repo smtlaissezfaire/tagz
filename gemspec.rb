@@ -1,3 +1,5 @@
+#! /usr/bin/env gem build
+
 lib, version = File::basename(File::dirname(File::expand_path(__FILE__))).split %r/-/, 2
 
 require 'rubygems'
@@ -21,14 +23,15 @@ Gem::Specification::new do |spec|
   spec.executables = shiteless[Dir::glob("bin/*")].map{|exe| File::basename exe}
   
   spec.require_path = "lib" 
-  spec.autorequire = lib
 
   spec.has_rdoc = File::exist? "doc" 
   spec.test_suite_file = "test/#{ lib }.rb" if File::directory? "test"
   #spec.add_dependency 'lib', '>= version'
+  spec.add_dependency 'fattr'
 
   spec.extensions << "extconf.rb" if File::exists? "extconf.rb"
 
+  spec.rubyforge_project = 'codeforpeople'
   spec.author = "Ara T. Howard"
   spec.email = "ara.t.howard@gmail.com"
   spec.homepage = "http://codeforpeople.com/lib/ruby/#{ lib }/"

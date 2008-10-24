@@ -1,7 +1,5 @@
 unless defined? Tagz
 
-  require 'cgi'
-
   module Tagz
     unless defined?(Tagz::VERSION)
       Tagz::VERSION = [
@@ -10,6 +8,15 @@ unless defined? Tagz
         Tagz::VERSION_TEENY = 0 
       ].join('.')
       def Tagz.version() Tagz::VERSION end
+    end
+
+    def Tagz.escapeHTML string
+      string = string.to_s.dup
+      string.gsub!(%r/&/n, '&amp;')
+      string.gsub!(%r/\"/n, '&quot;')
+      string.gsub!(%r/>/n, '&gt;')
+      string.gsub!(%r/</n, '&lt;')
+      string
     end
 
     class Fragment < ::String
@@ -28,8 +35,8 @@ unless defined? Tagz
         unless options.empty?
           ' ' << 
             options.map do |key, value|
-              key = CGI.escapeHTML key.to_s
-              value = CGI.escapeHTML value.to_s
+              key = Tagz.escapeHTML key.to_s
+              value = Tagz.escapeHTML value.to_s
               if value =~ %r/"/
                 raise ArgumentError, value if value =~ %r/'/
                 value = "'#{ value }'"
@@ -113,8 +120,8 @@ unless defined? Tagz
       unless options.empty?
         attributes = ' ' << 
           options.map do |key, value|
-            key = CGI.escapeHTML key.to_s
-            value = CGI.escapeHTML value.to_s
+            key = Tagz.escapeHTML key.to_s
+            value = Tagz.escapeHTML value.to_s
             if value =~ %r/"/
               raise ArgumentError, value if value =~ %r/'/
               value = "'#{ value }'"
