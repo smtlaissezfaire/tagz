@@ -4,7 +4,7 @@ unless defined? Tagz
     unless defined?(Tagz::VERSION)
       Tagz::VERSION = [
         Tagz::VERSION_MAJOR = 4,
-        Tagz::VERSION_MINOR = 2,
+        Tagz::VERSION_MINOR = 5,
         Tagz::VERSION_TEENY = 0 
       ].join('.')
       def Tagz.version() Tagz::VERSION end
@@ -206,7 +206,7 @@ unless defined? Tagz
         when 'e'
           Element.new(*a, &b)
         when '__'
-          tagz{ tagz << "\n" }
+          tagz{ tagz << "\n"; a.each{|s| tagz << s}; }
         else
           begin
             super
