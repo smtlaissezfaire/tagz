@@ -4,7 +4,7 @@ unless defined? Tagz
     unless defined?(Tagz::VERSION)
       Tagz::VERSION = [
         Tagz::VERSION_MAJOR = 4,
-        Tagz::VERSION_MINOR = 5,
+        Tagz::VERSION_MINOR = 6,
         Tagz::VERSION_TEENY = 0 
       ].join('.')
       def Tagz.version() Tagz::VERSION end
@@ -27,6 +27,14 @@ unless defined? Tagz
 
       def + other
         self.dup << other
+      end
+
+      def to_s
+        self
+      end
+
+      def to_str
+        self
       end
     end
 
@@ -141,7 +149,7 @@ unless defined? Tagz
         if block
           size = tagz.size
           value = block.call(tagz)
-          if NilClass == value
+          if NilClass === value
             tagz[-1] = "/>"
           else
             tagz << value.to_s unless(Fragment === value or tagz.size > size)
@@ -175,7 +183,7 @@ unless defined? Tagz
           size = @tagz.size
           value = instance_eval(&block)
           @tagz << value unless(Fragment === value or @tagz.size > size)
-          @tagz.to_s
+          @tagz
         ensure
           @tagz = nil if top
         end
